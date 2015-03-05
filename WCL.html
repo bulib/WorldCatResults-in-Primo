@@ -1,0 +1,140 @@
+<!DOCTYPE html SYSTEM "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title></title>
+
+        <style>
+            .hideWCL{
+                display:none;
+            }
+            .odd{
+                background:#eff3f6 !important;
+                border-top:1px solid #DFDFDF !important;
+                height:auto !important;
+                padding-top:5px !important;
+                padding-bottom:5px !important;
+            }
+            .even{
+                background:#ffffff !important;
+                border-top:1px solid #DFDFDF !important;
+                height:auto !important;
+                padding-top:5px !important;
+                padding-bottom:5px !important;
+            }</style>
+        // use the jquery.rssfeed.min.js library
+        // modify the src url below to point to the location of the library on your server.
+        <script src="../ADDONS/jquery.zrssfeed.min.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            // add a checkbox to include worldcat results
+            $('.EXLTopLevelFacetList ol').append('<li class="EXLFacet"><input id="toggleWCL" type="checkbox" name="toggleWCL" value="off" class="uncheckable wc_showhide"> <label for="toggleWCL">&nbsp;&nbsp;Include WorldCat</label></input></li>');
+            
+            // function toggles visibility of the worldcat results tile
+            $('.wc_showhide').click(function() {
+                $('.worldcat').toggleClass('hideWCL');
+                $('#Resultx').insertAfter('#exlidResult0');
+                });
+           // Add variables for the worldcat query
+            var wc_key = '&wskey=ENTER_YOUR_WorldCatSearchAPI_KEY';
+            var getQuery = queryString("vl%28freeText0%29");
+            if (getQuery == 'false') {getQuery = queryString("vl(freeText0)")};
+            if (getQuery == 'false') {getQuery = queryString("query")};
+            getQuery = getQuery.replace('any,contains,','');
+            var wclQuery = 'http://www.worldcat.org/webservices/catalog/search/worldcat/opensearch?q=' + getQuery + wc_key;
+            var wclHTML = "<tr id='Resultx' class='worldcat hideWCL'><td colspan='4' class='imagestd worldcat hideWCL'><div id='wcl_results' class='imagelink worldcat hideWCL'><div class='rssError'></div></div></td></tr>";
+            
+            $( "#exlidResult0" ).before( wclHTML );
+            $('#wcl_results').rssfeed(wclQuery, {
+                limit: 10,
+                date: false,
+                header: false,
+                content: true,
+                linkcontent: false,
+                titletag: 'h5'
+                },  function(e) {
+        
+                // add a link to execute the search on WorldCat Local        
+                $('.rssBody').before('<h4 class="wclLink"><a href="http://www.worldcat.org/search?qt=wc_org_bu&q='+ getQuery + '" target="_blank">More results for: ' + getQuery.replace(/\+/g, ' ') + ' from WorldCat</a></h4>' );
+                // shorten the title
+                $('h5 a', e).each(function (i) {
+                        var title = $(this).text().substr(0, 100);
+                        if (title.length > 85) $(this).text(title.substr(0, title.lastIndexOf(" ")) + '....');
+                        $(this).attr('target','_blank');
+                        });
+
+                // remove empty p tags
+                var counter = 0
+                $('p').each(function () {
+                    var $this = $(this);
+                    if ($this.html().replace(/\s|&nbsp;/g, '').length == 0)
+                        $this.remove();
+                    });
+
+            });
+            // function to get the queryString of the Primo query
+            // Originally developed by Ido Peled
+            function queryString(key){
+	           var page = new PageQuery(window.location.search);
+	           return unescape(page.getValue(key));
+	           }
+	        // function PageQuery is called by queryString. This does the heavy lifting of parsing the query string to retrive the 
+            // value associated with the key that is passed as an argument.
+            // Originally developed by Ido Peled
+            function PageQuery(q) {
+	           if(q.length > 1) this.q = q.substring(1, q.length);
+            	else this.q = null;
+            	this.keyValuePairs = new Array();
+            	if(q) {
+            		for(var i=0; i < this.q.split("&").length; i++) {
+	           		this.keyValuePairs[i] = this.q.split("&")[i];
+	           		}
+            		}
+	           	this.getKeyValuePairs = function() { return this.keyValuePairs; }
+	           	this.getValue = function(s) {
+	           		for(var j=0; j < this.keyValuePairs.length; j++) {
+	           			if(this.keyValuePairs[j].split("=")[0] == s)
+	           				return this.keyValuePairs[j].split("=")[1];
+		          		}
+		      		 return false;
+	           	}
+	           	this.getParameters = function() {
+        			var a = new Array(this.getLength());
+        			for(var j=0; j < this.keyValuePairs.length; j++) {
+        				a[j] = this.keyValuePairs[j].split("=")[0];
+        			}
+        			return a;
+        		}
+        		this.getLength = function() { return this.keyValuePairs.length; }
+        	}
+
+        // module to change tags
+        $.extend({
+            replaceTag: function (currentElem, newTagObj, keepProps) {
+              var $currentElem = $(currentElem);
+              var i, $newTag = $(newTagObj).clone();
+             if (keepProps) {//{{{
+                   newTag = $newTag[0];
+                    newTag.className = currentElem.className;
+                   $.extend(newTag.classList, currentElem.classList);
+                   $.extend(newTag.attributes, currentElem.attributes);
+               }
+               //}}}
+               $currentElem.wrapAll($newTag);
+                $currentElem.contents().unwrap();
+                // return node; (Error spotted by Frank van Luijn)
+                return this; // Suggested by ColeLawrence
+            }
+        });
+
+        $.fn.extend({
+           replaceTag: function (newTagObj, keepProps) {
+            // "return" suggested by ColeLawrence
+            return this.each(function () {
+               jQuery.replaceTag(this, newTagObj, keepProps);
+           });
+        }
+        });
+
+        </script>
+    </head>
+    <body></body>
+</html>
